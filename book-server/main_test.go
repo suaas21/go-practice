@@ -58,7 +58,8 @@ func TestCreateBooks(t *testing.T) {
 
 }
 func TestDeleteBooks(t *testing.T) {
-
+	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
+	// pass 'nil' as the third parameter.
 	req := httptest.NewRequest("DELETE", "/books/1", nil)
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
@@ -79,6 +80,5 @@ func TestUpdateBooks(t *testing.T) {
 	Router().ServeHTTP(rr, req)
 	fmt.Println(rr.Code)
 	fmt.Println(rr.Body.String())
-	//fmt.Println("delete")
 
 }
