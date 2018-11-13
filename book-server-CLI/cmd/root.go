@@ -25,6 +25,8 @@ import (
 //var cfgFile string
 var port string
 
+var loggedIn bool
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "bookserver",
@@ -35,7 +37,7 @@ var rootCmd = &cobra.Command{
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("port:", port)
-		server.RunServer(port)
+		server.RunServer(port, loggedIn)
 	},
 }
 
@@ -49,5 +51,6 @@ func Execute() {
 }
 func init() {
 	rootCmd.PersistentFlags().StringVar(&port, "port", "8081", "it is Port no")
+	rootCmd.PersistentFlags().BoolVar(&loggedIn, "logIn", false, "it is loogedIn")
 
 }

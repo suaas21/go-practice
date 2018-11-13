@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
@@ -21,20 +22,24 @@ func Router() *mux.Router {
 }
 
 func TestGetbooks(t *testing.T) {
+
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
-	req := httptest.NewRequest("GET", "/books/1", nil)
+	req := httptest.NewRequest("GET", "/books", nil)
+	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("sagor:azad")))
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
 	Router().ServeHTTP(rr, req)
-	fmt.Println(rr.Code)
+	//fmt.Println(rr.Code)
+	fmt.Println(rr.Body)
 	fmt.Println(rr.Body.String())
 
 }
 func TestGetbook(t *testing.T) {
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
-	req := httptest.NewRequest("GET", "/books", nil)
+	req := httptest.NewRequest("GET", "/books/1", nil)
+	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("sagor:azad")))
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
 	Router().ServeHTTP(rr, req)
@@ -50,6 +55,7 @@ func TestCreateBooks(t *testing.T) {
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(booktest)
 	req := httptest.NewRequest("POST", "/books", b)
+	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("sagor:azad")))
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
 	Router().ServeHTTP(rr, req)
@@ -61,6 +67,7 @@ func TestDeleteBooks(t *testing.T) {
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
 	req := httptest.NewRequest("DELETE", "/books/1", nil)
+	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("sagor:azad")))
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
 	Router().ServeHTTP(rr, req)
@@ -75,6 +82,7 @@ func TestUpdateBooks(t *testing.T) {
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(booktest)
 	req := httptest.NewRequest("PUT", "/books/2", b)
+	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("sagor:azad")))
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
 	Router().ServeHTTP(rr, req)
