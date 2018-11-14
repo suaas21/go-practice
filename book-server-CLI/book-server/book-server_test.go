@@ -1,4 +1,4 @@
-package server
+package bookserver
 
 import (
 	"bytes"
@@ -30,8 +30,7 @@ func TestGetbooks(t *testing.T) {
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
 	Router().ServeHTTP(rr, req)
-	//fmt.Println(rr.Code)
-	fmt.Println(rr.Body)
+	fmt.Println(rr.Code)
 	fmt.Println(rr.Body.String())
 
 }

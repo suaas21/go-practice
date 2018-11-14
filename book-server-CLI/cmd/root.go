@@ -37,7 +37,7 @@ var rootCmd = &cobra.Command{
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("port:", port)
-		server.RunServer(port, loggedIn)
+		bookserver.RunServer(port, loggedIn)
 	},
 }
 
@@ -50,7 +50,7 @@ func Execute() {
 	}
 }
 func init() {
-	rootCmd.PersistentFlags().StringVar(&port, "port", "8081", "it is Port no")
-	rootCmd.PersistentFlags().BoolVar(&loggedIn, "logIn", false, "it is loogedIn")
+	rootCmd.PersistentFlags().StringVarP(&port, "port", "p", "8081", "it is Port no")
+	rootCmd.PersistentFlags().BoolVarP(&loggedIn, "logIn", "l", false, "it is loogedIn")
 
 }
