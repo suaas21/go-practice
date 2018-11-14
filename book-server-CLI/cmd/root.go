@@ -19,7 +19,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/suaas21/go-practice/book-server-CLI/book-server"
+	bookserver "github.com/suaas21/go-practice/book-server-CLI/book-server"
 )
 
 //var cfgFile string
