@@ -92,7 +92,7 @@ func main() {
 
 				},
 			},
-			Type: corev1.ServiceTypeNodePort,
+			Type: corev1.ServiceTypeLoadBalancer,
 		},
 
 
@@ -129,10 +129,10 @@ func main() {
 	  in.Spec.Replicas = int32Ptr(2)
 	  return in
    })
-	//Display Updated Deployment
-	oneliners.PrettyJson(patchDeploymet)
+   //Display Updated Deployment
+   oneliners.PrettyJson(patchDeploymet)
 
-	//Update Service
+  //Update Service
 	patchService,_,err := core_util.PatchService(clientset, service, func(in *corev1.Service) *corev1.Service {
 		in.Spec.Type = corev1.ServiceTypeNodePort
 		return in
@@ -146,6 +146,8 @@ func main() {
 		fmt.Println(er.Error())
 	}
 	//Delete Service
+	er := clientset.CoreV1().Services(corev1.NamespaceDefault).Delete(service.Name, &metav1.DeleteOptions{})
+
 
 
 
