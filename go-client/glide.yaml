@@ -1,0 +1,5 @@
+package: github.com/suaas21/go-client
+import:
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/apis/meta/v1
