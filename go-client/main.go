@@ -142,12 +142,16 @@ func main() {
 
 	//Delete deployment
 	er := apps_util.DeleteDeployment(clientset,deployment.ObjectMeta)
-	if err != nil {
+	if er != nil{
 		fmt.Println(er.Error())
 	}
+
+
 	//Delete Service
 	er := clientset.CoreV1().Services(corev1.NamespaceDefault).Delete(service.Name, &metav1.DeleteOptions{})
-
+	if er != nil{
+		fmt.Println(er.Error())
+	}
 
 
 
