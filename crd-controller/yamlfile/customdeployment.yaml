@@ -1,0 +1,21 @@
+apiVersion: "crd.suaas21.com/v1beta1"
+kind: CustomDeployment
+metadata:
+  name:  book-server-cli
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: bookserser
+  template:
+    metadata:
+      labels:
+        app: bookserver
+    spec:
+      containers:
+        - name: bookserver
+          image: suaas21/book-server-cli:part1
+          ports:
+            - name:  container-port
+              containerPort:  8081
+              protocol: TCP
