@@ -4,7 +4,10 @@ metadata:
   name: customdeployments.crd.suaas21.com
 spec:
   group: crd.suaas21.com
-  version: v1beta1
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
   scope: Namespaced
   names:
     plural: customdeployments

@@ -1,4 +1,4 @@
-apiVersion: "crd.suaas21.com/v1beta1"
+apiVersion: crd.suaas21.com/v1alpha1
 kind: CustomDeployment
 metadata:
   name:  book-server-cli

@@ -10,7 +10,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 	"path/filepath"
-	_ "k8s.io/code-generator"
+	"github.com/tamalsaha/go-oneliners"
 )
 
 func main() {
@@ -32,6 +32,7 @@ func main() {
 	if err != nil{
 		panic(err)
 	}
+	fmt.Println("go-client")
 
 	customdeployment := &csappV1.CustomDeployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -73,27 +74,26 @@ func main() {
 		},
 
 	}
+	fmt.Println("go-client")
     //Create Customdeployment
     result, err := cs.CrdV1alpha1().CustomDeployments("default").Create(customdeployment)
 	if err != nil{
 		panic(err)
 	}
-    fmt.Println("Created Cuntomdeployment %q.\n",result.GetObjectMeta().GetName())
-
+	fmt.Println(result.GetObjectMeta().GetName())
+	oneliners.PrettyJson(result)
     //Update Customdeployment
-    update, err := cs.CrdV1alpha1().CustomDeployments("default").Update(customdeployment)
-	if err != nil{
-		panic(err)
-	}
-	fmt.Println("Updated Cuntomdeployment %q.\n",update.GetObjectMeta().GetName())
+   // update, err := cs.CrdV1alpha1().CustomDeployments("default").Update()
+	//if err != nil{
+	//	panic(err)
+	//}
+	//fmt.Println("Updated Cuntomdeployment %q.\n",update.GetObjectMeta().GetName())
 
     //Delete Customdeployment
     er := cs.CrdV1alpha1().CustomDeployments("default").Delete(customdeployment.Name, &metav1.DeleteOptions{})
 	if er != nil{
 		panic(err)
 	}
-
-
 
 }
 func int32Ptr(i int32) *int32 { return &i }
