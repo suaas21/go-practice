@@ -1,5 +1,5 @@
 hash: d8dad627c756806cf2037a876d51bebf6c9ea8f0aeccdead07bb6cf2be21b51a
-updated: 2018-12-14T12:09:40.362706349+06:00
+updated: 2018-12-17T11:49:34.262859949+06:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 782f4967f2dc4564575ca782fe2d04090b5faca8
@@ -224,6 +224,10 @@ imports:
   version: c59034cc13d587f5ef4e85ca0ade0c1866ae8e1d
   subpackages:
   - pkg/util/proto
+- name: k8s.io/sample-controller
+  version: 65d042cac583e070fbed2e595decd273bc6d9528
+  subpackages:
+  - pkg/signals
 - name: sigs.k8s.io/yaml
   version: fd68e9863619f6ec2fdd8625fe1f02e7c877e480
 testImports: []

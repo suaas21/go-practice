@@ -3,18 +3,29 @@ package main
 import (
 	"flag"
 	"fmt"
+	"k8s.io/client-go/kubernetes"
+	"log"
+	"time"
 
 	csappV1 "github.com/suaas21/go-practice/crd-controller/pkg/apis/crd.suaas21.com/v1alpha1"
-	cs "github.com/suaas21/go-practice/crd-controller/pkg/client/clientset/versioned"
+	clientset "github.com/suaas21/go-practice/crd-controller/pkg/client/clientset/versioned"
+	informers "github.com/suaas21/go-practice/crd-controller/pkg/client/informers/externalversions"
+	"github.com/tamalsaha/go-oneliners"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
+	"k8s.io/sample-controller/pkg/signals"
 	"path/filepath"
-	"github.com/tamalsaha/go-oneliners"
+)
+var (
+	kubeconfig *string
 )
 
 func main() {
-	var kubeconfig *string
+
+	stopCh := signals.SetupSignalHandler()
+
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "absolute path to the kubeconfig file")
 	} else {
@@ -27,11 +38,29 @@ func main() {
 		panic(err)
 	}
 
-	cs, err := cs.NewForConfig(config)
-
+	kubeclient, err := kubernetes.NewForConfig(config)
 	if err != nil{
 		panic(err)
 	}
+	client, err := clientset.NewForConfig(config)
+	if err != nil{
+		panic(err)
+	}
+
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeclient, time.Second*30)
+	customInformerFactory := informers.NewSharedInformerFactory(client, time.Second*30)
+
+	controller := Newcontroller(kubeclient, client, kubeInformerFactory, customInformerFactory)
+
+	go kubeInformerFactory.Start(stopCh)
+	go customInformerFactory.Start(stopCh)
+
+
+    if err = controller.Run(stopCh); err != nil{
+    	log.Fatal(err)
+	}
+
+
 	fmt.Println("go-client")
 
 	customdeployment := &csappV1.CustomDeployment{
@@ -76,7 +105,7 @@ func main() {
 	}
 	fmt.Println("go-client")
     //Create Customdeployment
-    result, err := cs.CrdV1alpha1().CustomDeployments("default").Create(customdeployment)
+    result, err := client.CrdV1alpha1().CustomDeployments("default").Create(customdeployment)
 	if err != nil{
 		panic(err)
 	}
@@ -90,7 +119,7 @@ func main() {
 	//fmt.Println("Updated Cuntomdeployment %q.\n",update.GetObjectMeta().GetName())
 
     //Delete Customdeployment
-    er := cs.CrdV1alpha1().CustomDeployments("default").Delete(customdeployment.Name, &metav1.DeleteOptions{})
+    er := client.CrdV1alpha1().CustomDeployments("default").Delete(customdeployment.Name, &metav1.DeleteOptions{})
 	if er != nil{
 		panic(err)
 	}
