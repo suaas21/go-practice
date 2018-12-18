@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
-	"strconv"
+	"github.com/tamalsaha/go-oneliners"
+	"log"
 	"time"
 
 	crdcontrolllerv1alpha1 "github.com/suaas21/go-practice/crd-controller/pkg/apis/crd.suaas21.com/v1alpha1"
@@ -18,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	kubelisters "k8s.io/client-go/listers/apps/v1"
+	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 )
@@ -46,16 +47,16 @@ type Controller struct {
 }
 
 func Newcontroller(kubeclientset kubernetes.Interface, clientset clientset.Interface,
-	//kubeInfomerFactory kubeinformers.SharedInformerFactory,
+	kubeInfomerFactory kubeinformers.SharedInformerFactory,
 	custonInformerFactory informers.SharedInformerFactory) *Controller {
 
-	//deployment := kubeInfomerFactory.Apps().V1().Deployments()
+	deployment := kubeInfomerFactory.Apps().V1().Deployments()
 	custom := custonInformerFactory.Crd().V1alpha1().CustomDeployments()
 
 	controller := &Controller{
 		kubeclientset:          kubeclientset,
 		clientset:              clientset,
-		//deploymentLister:       deployment.Lister(),
+		deploymentLister:       deployment.Lister(),
 		customDeploymentLister: custom.Lister(),
 
 		//deploymentsInformer:      deployment.Informer(),
@@ -191,169 +192,61 @@ func (c *Controller) customSyncHandler(key string) error {
 
 		return err
 	}
-	customdeployment := custom.DeepCopy()
 
-	if customdeployment.Status.AvailableReplicas + customdeployment.Status.CreatingReplicas < *customdeployment.Spec.Replicas{
-		pod, err := c.CreateNewPod(customdeployment.Spec.Template, customdeployment)
+	fmt.Println(custom.Namespace, "/", custom.Name)
+	deploymentName := custom.Spec.Name
+	if deploymentName == "" {
 
-		label := ""
-		if err != nil{
-			fmt.Printf("Can't create pod. Reason: %v\n", err.Error())
-			return err
-		}
-		podName := string(pod.GetName())
-		c.PodOwnerKey[podName] = key
-		c.PreviousPodPhase[podName] = "Creating"
-
-		mp := pod.GetLabels()
-        for key, value := range mp{
-			label += key + "=" + value
-		}
-        c.podLabel =label
-		err2 := c.updateCustomStatus(customdeployment)
-
-		if err2 != nil {
-			fmt.Printf("Pod created but failed to update DeploymentStatus.")
-			return err2
-		}
-
-	}else if customdeployment.Status.AvailableReplicas+customdeployment.Status.CreatingReplicas > *customdeployment.Spec.Replicas{
-		err := c.DeletePod(customdeployment.Status.AvailableReplicas + customdeployment.Status.CreatingReplicas - *customdeployment.Spec.Replicas)
-
-		if err != nil {
-			fmt.Println("Can't Delete Pod. Reason: ", err)
-			return err
-		}
-
-		err = c.updateCustomStatus(customdeployment)
-		if err != nil {
-			fmt.Println("Failed to update DeploymentStatus.")
-			return err
-		}
-
-	}else{
-		//everything ok
+		runtime.HandleError(fmt.Errorf("%s: deployment name must be specified\n", key))
+		return nil
 	}
+	fmt.Printf("deployment Name -> %s\n", deploymentName)
+	oneliners.PrettyJson(custom, "custom")
 
+	deployment, err := c.deploymentLister.Deployments(custom.Namespace).Get(deploymentName)
 
-	//fmt.Println(custom.Namespace, "/", custom.Name)
-	//deploymentName := custom.Spec.Name
-	//if deploymentName == "" {
-	//
-	//	runtime.HandleError(fmt.Errorf("%s: deployment name must be specified\n", key))
-	//	return nil
-	//}
-	//fmt.Printf("deployment Name -> %s\n", deploymentName)
-	//
-	//deployment, err := c.deploymentLister.Deployments(custom.Namespace).Get(deploymentName)
-	//
-	//fmt.Println(err)
-	//
-	//if err != nil {
-	//	if errors.IsNotFound(err) {
-	//		deployment, err = c.kubeclientset.AppsV1().Deployments(custom.Namespace).Create(NewDeployment(custom))
-	//		if err != nil {
-	//			fmt.Errorf("====================", err)
-	//		}
-	//	}
-	//
-	//	log.Println("============Error===========", err)
-	//	return err
-	//}
-	//
-	//oneliners.PrettyJson(custom, "custom")
-	//oneliners.PrettyJson(deployment, "deployment")
-	//
-	//if custom.Spec.Replicas != nil && *custom.Spec.Replicas != *deployment.Spec.Replicas {
-	//	fmt.Println("customdeployment: %d, deployR: %d", *custom.Spec.Replicas, *deployment.Spec.Replicas)
-	//	deployment, err = c.kubeclientset.AppsV1().Deployments(custom.Namespace).Update(NewDeployment(custom))
-	//}
-	//if err != nil {
-	//	fmt.Println("error occured in updating deployment", deployment.Name, "is", err)
-	//	return err
-	//}
-	//fmt.Println("no error in updating deployment", deployment.Name)
-	//err = c.updateCustomStatus(custom, deployment)
-	//if err != nil {
-	//	fmt.Println("error occured in updating status of something", custom.Name, "is", err)
-	//	return err
-	//}
+	fmt.Println(err)
 
-	return nil
-}
-
-func (c *Controller) CreateNewPod(podTemplate crdcontrolllerv1alpha1.CustomPodTemplate, customdeployment *crdcontrolllerv1alpha1.CustomDeployment)(*apiv1.Pod, error){
-	podClient := c.kubeclientset.CoreV1().Pods(apiv1.NamespaceDefault)
-
-	pod := &apiv1.Pod{
-		ObjectMeta:metav1.ObjectMeta{
-		   Name:customdeployment.GetName()+"-"+strconv.Itoa(rand.Int()),
-		   Labels: podTemplate.GetObjectMeta().GetLabels(),
-		},
-		//Spec: podTemplate.Spec,
-
-	}
-	newPod, err := podClient.Create(pod)
-	if err == nil{
-		fmt.Printf("New pod with name %v has been created.\n", newPod.GetName())
-	}
-
-	return newPod, err
-}
-func (c *Controller) DeletePod(deletionLimit int32) error{
-
-	podClient := c.kubeclientset.CoreV1().Pods(apiv1.NamespaceDefault)
-
-	podList, err := c.kubeclientset.CoreV1().Pods(apiv1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: c.podLabel})
 	if err != nil {
-		fmt.Println("Can't get pod list. Reason: ", err)
-	}
-
-	deletedPod := int32(0)
-
-	for _, pod := range podList.Items {
-
-		delErr := podClient.Delete(pod.GetName(), &metav1.DeleteOptions{})
-
-		if delErr != nil {
-			return delErr
-		} else {
-			c.PreviousPodPhase[pod.GetName()] = "Terminating"
-			deletedPod++
-			if deletedPod >= deletionLimit {
-				break
+		if errors.IsNotFound(err) {
+			deployment, err = c.kubeclientset.AppsV1().Deployments(custom.Namespace).Create(NewDeployment(custom))
+			if err != nil {
+				fmt.Errorf("====================", err)
 			}
 		}
+
+		log.Println("============Error===========", err)
+		return err
+	}
+
+	oneliners.PrettyJson(custom, "custom")
+	oneliners.PrettyJson(deployment, "deployment")
+
+	if custom.Spec.Replicas != nil && *custom.Spec.Replicas != *deployment.Spec.Replicas {
+		fmt.Println("customdeployment: %d, deployR: %d", *custom.Spec.Replicas, *deployment.Spec.Replicas)
+		deployment, err = c.kubeclientset.AppsV1().Deployments(custom.Namespace).Update(NewDeployment(custom))
+	}
+	if err != nil {
+		fmt.Println("error occured in updating deployment", deployment.Name, "is", err)
+		return err
+	}
+	fmt.Println("no error in updating deployment", deployment.Name)
+	err = c.updateCustomStatus(custom, deployment)
+	if err != nil {
+		fmt.Println("error occured in updating status of something", custom.Name, "is", err)
+		return err
 	}
 
 	return nil
 }
 
-func (c *Controller) updateCustomStatus(customdeployment *crdcontrolllerv1alpha1.CustomDeployment) error {
-
-	creating := 0
-
-	podList, err := c.kubeclientset.CoreV1().Pods(apiv1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: c.podLabel})
-	if err != nil {
-		fmt.Println("Can't get pod list. Reason: ", err)
-	}
-
-	for _, pod := range podList.Items {
-
-		if c.PreviousPodPhase[pod.GetName()] == "Creating" {
-			creating++
-		}
-	}
-
-	//Don't modify cache. Work on it's copy
-	customdeploymentCopy := customdeployment.DeepCopy()
-
-	customdeploymentCopy.Spec.Replicas = customdeployment.Spec.Replicas
-	customdeploymentCopy.Status.CreatingReplicas = int32(creating)
 
 
-	//Now update the cache
-	_, err = c.clientset.CrdV1alpha1().CustomDeployments(apiv1.NamespaceDefault).Update(customdeploymentCopy)
+func (c *Controller) updateCustomStatus(custom *crdcontrolllerv1alpha1.CustomDeployment, deployment *v1.Deployment) error {
+	customcopy := custom.DeepCopy()
+	customcopy.Status.AvailableReplicas = deployment.Status.AvailableReplicas
+
+	_, err := c.clientset.CrdV1alpha1().CustomDeployments(custom.Namespace).Update(customcopy)
 
 	return err
 }
@@ -377,22 +270,21 @@ func NewDeployment(custom *crdcontrolllerv1alpha1.CustomDeployment) *v1.Deployme
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: custom.Spec.Template.Labels,
 				},
-				Spec: custom.Spec.Template.Spec,
-				//Spec: apiv1.PodSpec{
-					//Containers: []apiv1.Container{
-					//	{
-					//		Name:  custom.Spec.Template.Spec.Containers[0].Name,
-					//		Image: custom.Spec.Template.Spec.Containers[0].Image,
-					//		Ports: []apiv1.ContainerPort{
-					//			{
-					//				Name:          custom.Spec.Template.Spec.Containers[0].Ports[0].Name,
-					//				Protocol:      apiv1.ProtocolTCP,
-					//				ContainerPort: custom.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort,
-					//			},
-					//		},
-					//	},
-					//},
-				//},
+				Spec: apiv1.PodSpec{
+					Containers: []apiv1.Container{
+						{
+							Name:  custom.Spec.Template.Spec.Containers[0].Name,
+							Image: custom.Spec.Template.Spec.Containers[0].Image,
+							Ports: []apiv1.ContainerPort{
+								{
+									Name:          custom.Spec.Template.Spec.Containers[0].Ports[0].Name,
+									Protocol:      apiv1.ProtocolTCP,
+									ContainerPort: custom.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort,
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
