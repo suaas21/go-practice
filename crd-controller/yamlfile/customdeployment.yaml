@@ -3,10 +3,11 @@ kind: CustomDeployment
 metadata:
   name:  book-server-cli
 spec:
+  name: bookserver
   replicas: 5
   selector:
     matchLabels:
-      app: bookserser
+      app: bookserver
   template:
     metadata:
       labels:
