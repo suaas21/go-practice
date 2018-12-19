@@ -31,12 +31,12 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("svc called")
-		customdeploy.CreateService()
+		customdeploy.CreateService(kubeClient)
 	},
 }
 
 func init() {
-	createCmd.AddCommand(svcCmd)
+	rootCmd.AddCommand(svcCmd)
 
 	// Here you will define your flags and configuration settings.
 

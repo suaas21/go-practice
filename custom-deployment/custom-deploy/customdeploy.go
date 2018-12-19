@@ -8,6 +8,7 @@ import (
 
 	//"flag"
 	//"fmt"
+	core_util "github.com/appscode/kutil/core/v1"
 	csappV1 "github.com/suaas21/go-practice/custom-deployment/pkg/apis/crd.suaas21.com/v1alpha1"
 	clientset "github.com/suaas21/go-practice/custom-deployment/pkg/client/clientset/versioned"
 	"github.com/tamalsaha/go-oneliners"
@@ -19,7 +20,7 @@ import (
 	//"path/filepath"
 )
 
-var kubeclient *kubernetes.Clientset
+//var kubeclient *kubernetes.Clientset
 
 func CreateCustomDeployment(client *clientset.Clientset) {
 
@@ -68,12 +69,13 @@ func CreateCustomDeployment(client *clientset.Clientset) {
 	if err != nil {
 		panic(err)
 	}
+	oneliners.PrettyJson(result)
 	fmt.Println(result.GetObjectMeta().GetName())
 	oneliners.PrettyJson(result)
 
 }
 
-func DeleteAll(client *clientset.Clientset) {
+func DeleteAll(client *clientset.Clientset, kubeClient kubernetes.Interface) {
 	//Delete Customdeployment
 	err := client.CrdV1alpha1().CustomDeployments("default").Delete("bookserver", &metav1.DeleteOptions{})
 	if err != nil {
@@ -81,7 +83,7 @@ func DeleteAll(client *clientset.Clientset) {
 	}
 
 	// delete service
-	kubeclient := kubeclient.CoreV1().Services(corev1.NamespaceDefault)
+	kubeclient := kubeClient.CoreV1().Services(corev1.NamespaceDefault)
 	log.Println("Deleting service...")
 	if err := kubeclient.Delete("svc-bookserver", &metav1.DeleteOptions{
 		//PropagationPolicy: &deletePolicy,
@@ -92,9 +94,9 @@ func DeleteAll(client *clientset.Clientset) {
 
 }
 
-func CreateService() {
+func CreateService(kubeClient kubernetes.Interface) {
+	fmt.Println("In CreateService function--->")
 
-	kubeclient := kubeclient.CoreV1().Services(corev1.NamespaceDefault)
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "svc-bookserver",
@@ -114,13 +116,19 @@ func CreateService() {
 			Type: corev1.ServiceTypeLoadBalancer,
 		},
 	}
-	// Create Service
-	fmt.Println("Creating service...")
-	result, err := kubeclient.Create(svc)
+
+
+	//Cerate Service
+	resService,_, err:= core_util.CreateOrPatchService(kubeClient,svc.ObjectMeta, func(in *corev1.Service) *corev1.Service {
+		in.Spec = svc.Spec
+
+		return in
+
+	})
 	if err != nil {
-		log.Fatal("error in creating service", err)
+		fmt.Println(err.Error())
 	}
-	fmt.Printf("Created service %q.\n", result.GetObjectMeta().GetName())
+	fmt.Printf("Created service %q.\n", resService.GetObjectMeta().GetName())
 
 	// The url at which we can access the now
 	//node, err := kubeclient.corev1().Nodes().Get("minikube", metav1.GetOptions{})
