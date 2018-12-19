@@ -57,7 +57,7 @@ func init() {
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	// will be global for your application.mmm
 	home := homedir.HomeDir()
 	fmt.Println("------->", home)
 	value := filepath.Join(home, ".kube", "config")
