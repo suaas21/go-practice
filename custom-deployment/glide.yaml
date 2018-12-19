@@ -1,0 +1,42 @@
+package: github.com/suaas21/go-practice/custom-deployment
+import:
+- package: github.com/appscode/go
+  subpackages:
+  - signals
+- package: github.com/spf13/cobra
+  version: v0.0.3
+- package: github.com/tamalsaha/go-oneliners
+- package: k8s.io/api
+  subpackages:
+  - apps/v1
+  - core/v1
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/api/errors
+  - pkg/apis/meta/v1
+  - pkg/labels
+  - pkg/runtime
+  - pkg/runtime/schema
+  - pkg/runtime/serializer
+  - pkg/types
+  - pkg/util/intstr
+  - pkg/util/runtime
+  - pkg/util/wait
+  - pkg/watch
+- package: k8s.io/client-go
+  version: v10.0.0
+  subpackages:
+  - discovery
+  - discovery/fake
+  - informers
+  - kubernetes
+  - listers/apps/v1
+  - rest
+  - testing
+  - tools/cache
+  - tools/clientcmd
+  - util/flowcontrol
+  - util/homedir
+  - util/workqueue
+- package: k8s.io/klog
+  version: v0.1.0

@@ -1,9 +1,0 @@
-package: github.com/suaas21/go-practice/crd-controller
-import:
-- package: k8s.io/api
-  subpackages:
-  - core/v1
-- package: k8s.io/apimachinery
-  subpackages:
-  - pkg/apis/meta/v1
-- package: k8s.io/code-generator
