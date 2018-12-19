@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	clientset "github.com/suaas21/go-practice/custom-deployment/pkg/client/clientset/versioned"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 	"log"
@@ -25,9 +26,9 @@ import (
 	"path/filepath"
 )
 
-var kubeconfig *string
+var kubeconfig string
 var client *clientset.Clientset
-
+var kubeClient *kubernetes.Clientset
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "go-client",
@@ -62,13 +63,16 @@ func init() {
 	fmt.Println("------->", home)
 	value := filepath.Join(home, ".kube", "config")
 	usage := "(optional) absolute path to the kubeconfig file"
+
+	fmt.Println(">>>>>>>>>>>>", home, value, usage)
+	//glog.V(4).Infoln("\n-----------\n", kubeconfig)
 	if home != "" {
-		createCmd.PersistentFlags().StringVar(kubeconfig, "kubeconfig", value, usage)
+		createCmd.PersistentFlags().StringVar(&kubeconfig, "kubeconfig", value, usage)
 	} else {
-		createCmd.PersistentFlags().StringVar(kubeconfig, "kubeconfig", "", usage)
+		createCmd.PersistentFlags().StringVar(&kubeconfig, "kubeconfig", "", usage)
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -76,5 +80,8 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	kubeClient, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

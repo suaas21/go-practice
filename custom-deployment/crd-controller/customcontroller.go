@@ -199,7 +199,7 @@ func (c *Controller) processNextItem() bool {
 }
 
 func (c *Controller) customSyncHandler(key string) error {
-	fmt.Println("handling the customdeployment resource named \"something-exmp\"...")
+	fmt.Println("handling the customdeployment resource named ...")
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
@@ -237,16 +237,16 @@ func (c *Controller) customSyncHandler(key string) error {
 		if errors.IsNotFound(err) {
 			deployment, err = c.kubeclientset.AppsV1().Deployments(custom.Namespace).Create(NewDeployment(custom))
 			if err != nil {
-				fmt.Errorf("====================", err)
+				log.Fatal(err)
 			}
 		}
 
-		log.Println("============Error===========", err)
+		log.Println(err)
 		return err
 	}
 
-	oneliners.PrettyJson(custom, "custom")
-	oneliners.PrettyJson(deployment, "deployment")
+	//oneliners.PrettyJson(custom, "custom")
+	//oneliners.PrettyJson(deployment, "deployment")
 
 	if custom.Spec.Replicas != nil && *custom.Spec.Replicas != *deployment.Spec.Replicas {
 		fmt.Println("customdeployment: %d, deployR: %d", *custom.Spec.Replicas, *deployment.Spec.Replicas)
