@@ -6,6 +6,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"log"
 
+
 	core_util "github.com/appscode/kutil/core/v1"
 	csappV1 "github.com/suaas21/go-practice/custom-deployment/pkg/apis/crd.suaas21.com/v1alpha1"
 	clientset "github.com/suaas21/go-practice/custom-deployment/pkg/client/clientset/versioned"
@@ -18,8 +19,10 @@ import (
 	//"path/filepath"
 )
 
+
 var kubeclient *kubernetes.Clientset
 var customdeployment *csappV1.CustomDeployment
+
 
 func init(){
 	customdeployment = &csappV1.CustomDeployment{
@@ -131,6 +134,7 @@ func CreateService(kubeClient kubernetes.Interface) {
 		fmt.Println(err.Error())
 	}
 	fmt.Printf("Created service %q.\n", resService.GetObjectMeta().GetName())
+
 
 }
 func UpdateCustomDeployment(client *clientset.Clientset){

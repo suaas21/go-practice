@@ -197,10 +197,9 @@ func (c *Controller) processNextItem() bool {
 	return true
 
 }
-
 func (c *Controller) customSyncHandler(key string) error {
 	fmt.Println("handling the customdeployment resource named ...")
-	//glog.Infoln("handling the customdeployment resource named ...")
+
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
@@ -248,11 +247,11 @@ func (c *Controller) customSyncHandler(key string) error {
 		}
 
 		log.Println(err)
-		//glog.Infoln(err)
+
 		return err
 	}
 
-	oneliners.PrettyJson(custom, "custom")
+	//oneliners.PrettyJson(custom, "custom")
 	//oneliners.PrettyJson(deployment, "deployment")
 
 	if custom.Spec.Replicas != nil && *custom.Spec.Replicas != *deployment.Spec.Replicas {
