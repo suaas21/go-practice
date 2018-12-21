@@ -6,8 +6,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"log"
 
-	//"flag"
-	//"fmt"
 	core_util "github.com/appscode/kutil/core/v1"
 	csappV1 "github.com/suaas21/go-practice/custom-deployment/pkg/apis/crd.suaas21.com/v1alpha1"
 	clientset "github.com/suaas21/go-practice/custom-deployment/pkg/client/clientset/versioned"
@@ -20,11 +18,11 @@ import (
 	//"path/filepath"
 )
 
-//var kubeclient *kubernetes.Clientset
+var kubeclient *kubernetes.Clientset
+var customdeployment *csappV1.CustomDeployment
 
-func CreateCustomDeployment(client *clientset.Clientset) {
-
-	customdeployment := &csappV1.CustomDeployment{
+func init(){
+	customdeployment = &csappV1.CustomDeployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "bookserver",
 			Namespace: "default",
@@ -65,6 +63,10 @@ func CreateCustomDeployment(client *clientset.Clientset) {
 			},
 		},
 	}
+}
+
+func CreateCustomDeployment(client *clientset.Clientset) {
+
 	result, err := client.CrdV1alpha1().CustomDeployments("default").Create(customdeployment)
 	if err != nil {
 		panic(err)
@@ -130,14 +132,20 @@ func CreateService(kubeClient kubernetes.Interface) {
 	}
 	fmt.Printf("Created service %q.\n", resService.GetObjectMeta().GetName())
 
-	// The url at which we can access the now
-	//node, err := kubeclient.corev1().Nodes().Get("minikube", metav1.GetOptions{})
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//fmt.Print("The url at which we can access the now is")
-	//fmt.Printf("%v:%v\n", node.Status.Addresses[0].Address, result.Spec.Ports[0].NodePort)
-
+}
+func UpdateCustomDeployment(client *clientset.Clientset){
+	//Update Deployment
+	nsclient :=client.CrdV1alpha1().CustomDeployments("default")
+	csd, err := nsclient.Get("bookserver", metav1.GetOptions{})
+	if err != nil{
+		log.Fatal(err)
+	}
+	csd.Spec.Replicas = int32Ptr(2)
+	updep, err := nsclient.Update(csd)
+	if err != nil{
+		fmt.Println(err)
+	}
+	oneliners.PrettyJson(updep)
 }
 
 func int32Ptr(i int32) *int32 { return &i }

@@ -8,6 +8,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/klog"
+	"github.com/golang/glog"
 	"log"
 	"path/filepath"
 	"time"
@@ -42,7 +43,6 @@ func main() {
 		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
 	}
 	flag.Parse()
-
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
 		//panic(err)
@@ -157,7 +157,7 @@ func (c *Controller) Run(stopch <-chan struct{}) error {
 	// Start the informer factories to begin populating the informer caches
 	fmt.Println("Starting CustomDeployment controller")
 	fmt.Println("Waiting for informer caches to sync")
-	if !cache.WaitForCacheSync(stopch, c.customdeploymentInformer.HasSynced, c.customdeploymentInformer.HasSynced) {
+	if !cache.WaitForCacheSync(stopch, c.customdeploymentInformer.HasSynced) {
 		fmt.Println("Timed out waiting for caches to sync")
 		return fmt.Errorf("%s", "Timed out waiting for caches to sync")
 	}
@@ -200,13 +200,16 @@ func (c *Controller) processNextItem() bool {
 
 func (c *Controller) customSyncHandler(key string) error {
 	fmt.Println("handling the customdeployment resource named ...")
+	//glog.Infoln("handling the customdeployment resource named ...")
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
+		//glog.Infoln("error in spliting")
 		runtime.HandleError(fmt.Errorf("invalid resource key: %s\n", key))
 		return nil
 	}
 
+	//glog.Infoln("splited into", namespace, name)
 	custom, err := c.customDeploymentLister.CustomDeployments(namespace).Get(name)
 	if err != nil {
 		// The Something resource may no longer exist, in which case we stop processing.
@@ -215,6 +218,7 @@ func (c *Controller) customSyncHandler(key string) error {
 			return nil
 		}
 		fmt.Println("err in getting something resource is ", err)
+		//glog.Infoln("err in getting something resource: %v", err)
 
 		return err
 	}
@@ -223,15 +227,17 @@ func (c *Controller) customSyncHandler(key string) error {
 	deploymentName := custom.Spec.Name
 	if deploymentName == "" {
 
+		//glog.Infoln(fmt.Errorf("%s: deployment name must be specified\n", key))
 		runtime.HandleError(fmt.Errorf("%s: deployment name must be specified\n", key))
 		return nil
 	}
 	fmt.Printf("deployment Name -> %s\n", deploymentName)
-	oneliners.PrettyJson(custom, "custom")
+	//glog.Infoln("deployment Name -> %s\n", deploymentName)
+	//oneliners.PrettyJson(custom, "custom")
 
 	deployment, err := c.deploymentLister.Deployments(custom.Namespace).Get(deploymentName)
 
-	fmt.Println(err)
+	//glog.Infoln(err)
 
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -242,10 +248,11 @@ func (c *Controller) customSyncHandler(key string) error {
 		}
 
 		log.Println(err)
+		//glog.Infoln(err)
 		return err
 	}
 
-	//oneliners.PrettyJson(custom, "custom")
+	oneliners.PrettyJson(custom, "custom")
 	//oneliners.PrettyJson(deployment, "deployment")
 
 	if custom.Spec.Replicas != nil && *custom.Spec.Replicas != *deployment.Spec.Replicas {
@@ -257,6 +264,7 @@ func (c *Controller) customSyncHandler(key string) error {
 		return err
 	}
 	fmt.Println("no error in updating deployment", deployment.Name)
+	glog.Infoln("no error in updating deployment", deployment.Name)
 	err = c.updateCustomStatus(custom, deployment)
 	if err != nil {
 		fmt.Println("error occured in updating status of something", custom.Name, "is", err)
